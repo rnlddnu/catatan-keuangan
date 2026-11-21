@@ -101,10 +101,10 @@ if(!ks.length)return h+ringkasAng(pm,0)+emp('Belum ada anggaran. Atur batas peng
 const tb=ks.reduce((s,k)=>s+Bm[k],0),ts=ks.reduce((s,k)=>s+(sp[k]||0),0),oth=Object.keys(sp).filter(k=>!(Bm[k]>0)).reduce((s,k)=>s+sp[k],0),
 col=p=>p>100?'#e5484d':p>=80?'#f59e0b':'#0fa97a',
 bar=(n,s,t)=>{const p=t?s/t*100:0;return`<div class="bar"><div><span>${esc(n)}</span><b>${rp(s)} / ${rp(t)}</b></div><i style="width:${Math.min(100,p)}%;background:${col(p)}"></i><small style="display:block;margin-top:4px;color:var(--mu)">${p>100?'Melebihi '+rp(s-t):'Sisa '+rp(t-s)} · ${Math.round(p)}%</small></div>`};
-return h+ringkasAng(pm,tb)+`<div class="gl" style="padding:16px">${bar('Pemakaian anggaran',ts,tb)}${ks.map(k=>bar(k,sp[k]||0,Bm[k])).join('')}${oth?`<small style="color:var(--mu)">Di luar anggaran: ${rp(oth)}</small>`:''}<small style="display:block;margin-top:6px;color:var(--mu)">${batasTxt(pm)}</small></div>`+btn}
+return h+ringkasAng(pm,tb)+`<h2>Pemakaian anggaran</h2><div class="gl" style="padding:16px">${bar('Total anggaran',ts,tb)}</div><h2>Rincian anggaran</h2><div class="gl" style="padding:16px">${ks.map(k=>bar(k,sp[k]||0,Bm[k])).join('')}${oth?`<small style="color:var(--mu)">Di luar anggaran: ${rp(oth)}</small>`:''}<small style="display:block;margin-top:6px;color:var(--mu)">${batasTxt(pm)}</small></div>`+btn}
 function grafik(){const r=range(),L=D.filter(x=>inR(x,r.a,r.b)),c=byCat(L),m=sum(L,'masuk'),k=sum(L,'keluar'),mx=Math.max(m,k,1);
 const dd={};L.filter(x=>x.jenis==='keluar').forEach(x=>dd[x.tanggal]=(dd[x.tanggal]||0)+x.nominal);const ds=Object.keys(dd).sort().slice(-31),dm=Math.max(...ds.map(d=>dd[d]),1);
-return pbar()+anggaranHtml()+rancangan()+`<h2>Pengeluaran per kategori</h2>${c.length?`<div class="gl" style="padding:16px">${c.map(e=>`<div class="bar"><div><span>${esc(e[0])}</span><b>${rp(e[1])}</b></div><i style="width:${e[1]/c[0][1]*100}%"></i></div>`).join('')}</div>`:emp('Belum ada data pengeluaran.')}
+return pbar()+anggaranHtml()+`<h2>Pengeluaran per kategori</h2>${c.length?`<div class="gl" style="padding:16px">${c.map(e=>`<div class="bar"><div><span>${esc(e[0])}</span><b>${rp(e[1])}</b></div><i style="width:${e[1]/c[0][1]*100}%"></i></div>`).join('')}</div>`:emp('Belum ada data pengeluaran.')}
 <h2>Tren harian (pengeluaran)</h2>${ds.length?`<div class="gl tr">${ds.map(d=>`<div title="${tgl(d)}: ${rp(dd[d])}"><i style="height:${Math.max(4,dd[d]/dm*110)}px"></i>${+d.slice(8)}</div>`).join('')}</div>`:emp('Belum ada data harian.')}
 <h2>Pemasukan vs pengeluaran</h2><div class="gl" style="padding:16px"><div class="bar"><div><span>Pemasukan</span><b class="in">${rp(m)}</b></div><i class="g" style="width:${m/mx*100}%"></i></div><div class="bar"><div><span>Pengeluaran</span><b class="out">${rp(k)}</b></div><i style="width:${k/mx*100}%"></i></div></div>`}
 function riwayat(){const cs=[...new Set(D.map(x=>x.kategori).filter(Boolean))].sort();
@@ -206,10 +206,6 @@ const tot=a.reduce((s,x)=>s+x.nominal,0),bt=batas(BL);if(tot>bt.v)return toast('
 const nw=a.filter(x=>!KEL.some(k=>k.toLowerCase()===x.label.toLowerCase()));
 kirim(async()=>{const d=await SB.from('records').delete().eq('kind','budget').eq('extra->>bln',BL);if(d.error)return d;
 const rows=a.map(x=>mk('budget',x)).concat(nw.map(x=>mk('kategori',{label:x.label,extra:{j:'keluar'}})));return rows.length?SB.from('records').insert(rows):{}},'#sa','Anggaran tersimpan')}
-function rancangan(){const[y0,m0]=curKey().split('-').map(Number);let h='';
-for(let i=0;i<6;i++){const d=new Date(y0,m0-1+i,1),k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),Bk=gb(k),tot=Object.values(Bk).reduce((s,v)=>s+v,0),bt=batas(k),p=bt.v?tot/bt.v*100:0;
-h+=`<div class="it gl" onclick="openBudget('${k}')"><div class="t"><b>${nmBln(k)}</b><small>${BB[k]?'Anggaran sendiri':tot?'Mengikuti anggaran default':'Belum disusun'} · batas ${rp(bt.v)}${bt.est&&bt.v?' (perkiraan)':''}</small><div class="bar" style="margin:6px 0 0"><i style="width:${Math.min(100,p)}%;background:${p>100?'#e5484d':p>=80?'#f59e0b':'#0fa97a'}"></i></div></div><div class="n">${rp(tot)}</div></div>`}
-return`<h2>Rancangan anggaran</h2>${h}<small style="color:var(--mu);margin:0 4px">Ketuk satu bulan untuk menyusun atau mengubah anggarannya.</small>`}
 /* ---------- Saldo & transfer ---------- */
 function saldoAkun(){const s={};AKUN.forEach(a=>s[a]=SA[a]||0);Object.keys(SA).forEach(a=>s[a]=SA[a]);
 D.forEach(x=>{if(x.akun)s[x.akun]=(s[x.akun]||0)+(x.jenis==='masuk'?x.nominal:-x.nominal)});
